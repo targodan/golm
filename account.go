@@ -36,13 +36,13 @@ func CreateAccount() (*Account, error) {
 	randBytes := make([]byte, reqLength)
 
 	n, err := rand.Read(randBytes)
-	if err != nil || n < int(reqLength) {
+	if err != nil {
 		return nil, err
 	}
 
 	result := C.olm_create_account(
 		acc.ptr,
-		unsafe.Pointer(&randBytes[0]), C.size_t(len(randBytes)),
+		unsafe.Pointer(&randBytes[0]), C.size_t(n),
 	)
 
 	err = getError(acc, result)
@@ -60,13 +60,13 @@ func CreateAccount() (*Account, error) {
 func UnpickleAccount(key, pickle string) (*Account, error) {
 	acc := newAccount()
 
-	keybytes := []byte(key)
-	picklebytes := []byte(pickle)
+	keyBytes := []byte(key)
+	pickleBytes := []byte(pickle)
 
 	result := C.olm_unpickle_account(
 		acc.ptr,
-		unsafe.Pointer(&keybytes[0]), C.size_t(len(keybytes)),
-		unsafe.Pointer(&picklebytes[0]), C.size_t(len(picklebytes)),
+		unsafe.Pointer(&keyBytes[0]), C.size_t(len(keyBytes)),
+		unsafe.Pointer(&pickleBytes[0]), C.size_t(len(pickleBytes)),
 	)
 
 	err := getError(acc, result)
@@ -80,13 +80,13 @@ func UnpickleAccount(key, pickle string) (*Account, error) {
 // Pickle stores the account as a base64 encoded string.
 // C-Function: olm_pickle_account
 func (a *Account) Pickle(key string) (string, error) {
-	keybytes := []byte(key)
-	picklebytes := make([]byte, C.olm_pickle_account_length(a.ptr))
+	keyBytes := []byte(key)
+	pickleBytes := make([]byte, C.olm_pickle_account_length(a.ptr))
 
 	result := C.olm_pickle_account(
 		a.ptr,
-		unsafe.Pointer(&keybytes[0]), C.size_t(len(keybytes)),
-		unsafe.Pointer(&picklebytes[0]), C.size_t(len(picklebytes)),
+		unsafe.Pointer(&keyBytes[0]), C.size_t(len(keyBytes)),
+		unsafe.Pointer(&pickleBytes[0]), C.size_t(len(pickleBytes)),
 	)
 
 	err := getError(a, result)
@@ -94,5 +94,115 @@ func (a *Account) Pickle(key string) (string, error) {
 		return "", err
 	}
 
-	return string(picklebytes[:result]), nil
+	return string(pickleBytes[:result]), nil
+}
+
+// IdentityKeys returns the accounts identity keys.
+//
+// C-Function: olm_account_identity_keys
+func (a *Account) IdentityKeys() (string, error) {
+	keyBytes := make([]byte, C.olm_account_identity_keys_length(a.ptr))
+
+	result := C.olm_account_identity_keys(
+		a.ptr,
+		unsafe.Pointer(&keyBytes[0]), C.size_t(len(keyBytes)),
+	)
+
+	err := getError(a, result)
+	if err != nil {
+		return "", err
+	}
+
+	// Note: I didn't trim the bytes because the olm-docs don't specify that
+	// the return value of olm_account_identity_keys amounts to the keysize
+	// on success.
+	return string(keyBytes), nil
+}
+
+// Sign signs a message with the ed25519 key for this account.
+//
+// C-Function: olm_account_sign
+func (a *Account) Sign(message string) (signature string, err error) {
+	messageBytes := []byte(message)
+	signatureBytes := make([]byte, C.olm_account_signature_length(a.ptr))
+
+	result := C.olm_account_sign(
+		a.ptr,
+		unsafe.Pointer(&messageBytes[0]), C.size_t(len(messageBytes)),
+		unsafe.Pointer(&signatureBytes[0]), C.size_t(len(signatureBytes)),
+	)
+
+	err = getError(a, result)
+	if err != nil {
+		return "", err
+	}
+
+	return string(signatureBytes), nil
+}
+
+// OneTimeKeys returns the public parts of the unpublished one time keys
+// for the account into the one_time_keys output buffer.
+//
+// The returned data is a JSON-formatted object with the single property
+// curve25519, which is itself an object mapping key id to
+// base64-encoded Curve25519 key. For example:
+//
+//     {
+//         curve25519: {
+//             "AAAAAA": "wo76WcYtb0Vk/pBOdmduiGJ0wIEjW4IBMbbQn7aSnTo",
+//             "AAAAAB": "LRvjo46L1X2vx69sS9QNFD29HWulxrmW11Up5AfAjgU"
+//         }
+//     }
+//
+// C-Function: olm_account_one_time_keys
+func (a *Account) OneTimeKeys() (string, error) {
+	keysBytes := make([]byte, C.olm_account_one_time_keys_length(a.ptr))
+
+	result := C.olm_account_one_time_keys(
+		a.ptr,
+		unsafe.Pointer(&keysBytes[0]), C.size_t(len(keysBytes)),
+	)
+
+	err := getError(a, result)
+	if err != nil {
+		return "", err
+	}
+
+	return string(keysBytes), nil
+}
+
+// MarkKeysAsPublished marks the current set of one time keys as being published.
+//
+// C-Function: olm_account_mark_keys_as_published
+func (a *Account) MarkKeysAsPublished() error {
+	return getError(a, C.olm_account_mark_keys_as_published(a.ptr))
+}
+
+// MaxNumberOfOneTimeKeys returns the largest number of one time keys this account can store.
+//
+// C-Function: olm_account_mark_keys_as_published
+func (a *Account) MaxNumberOfOneTimeKeys() int {
+	return int(C.olm_account_max_number_of_one_time_keys(a.ptr))
+}
+
+// GenerateOneTimeKeys generates a number of new one time keys. If the total number of keys stored
+// by this account exceeds MaxNumberOfOneTimeKeys() then the old keys are discarded.
+//
+// C-Function: olm_account_generate_one_time_keys
+func (a *Account) GenerateOneTimeKeys(numberOfKeys int) error {
+	reqLength := C.olm_account_generate_one_time_keys_random_length(a.ptr, C.size_t(numberOfKeys))
+	randBytes := make([]byte, reqLength)
+
+	n, err := rand.Read(randBytes)
+	if err != nil {
+		return err
+	}
+
+	result := C.olm_account_generate_one_time_keys(
+		a.ptr,
+		C.size_t(numberOfKeys),
+		unsafe.Pointer(&randBytes[0]), C.size_t(n),
+	)
+
+	return getError(a, result)
 }
