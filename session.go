@@ -27,6 +27,38 @@ func (s *Session) lastError() string {
 	return C.GoString(C.olm_session_last_error(s.ptr))
 }
 
+// CreateOutboundSession creates a new out-bound session for sending messages to a given identityKey
+// and oneTimeKey.
+//
+// C-Function: olm_create_inbound_session
+func CreateOutboundSession(account *Account, theirIdentityKey, theirOneTimeKey string) (*Session, error) {
+	sess := newSession()
+
+	identKeyBytes := []byte(theirIdentityKey)
+	oneTimeKeyBytes := []byte(theirOneTimeKey)
+	randomBytes := make([]byte, C.olm_create_outbound_session_random_length(sess.ptr))
+
+	n, err := rand.Read(randomBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	result := C.olm_create_outbound_session(
+		sess.ptr,
+		account.ptr,
+		unsafe.Pointer(&identKeyBytes[0]), C.size_t(len(identKeyBytes)),
+		unsafe.Pointer(&oneTimeKeyBytes[0]), C.size_t(len(oneTimeKeyBytes)),
+		unsafe.Pointer(&randomBytes[0]), C.size_t(n),
+	)
+
+	err = getError(sess, result)
+	if err != nil {
+		return nil, err
+	}
+
+	return sess, nil
+}
+
 // CreateInboundSession creates a new in-bound session for sending/receiving messages from an
 // incoming PRE_KEY message.
 //
