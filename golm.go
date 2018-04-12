@@ -11,9 +11,11 @@ import (
 	"fmt"
 )
 
+type MessageType int
+
 const (
-	MessageTypePreKey  = 0
-	MessageTypeMessage = 1
+	MessageTypePreKey  MessageType = 0
+	MessageTypeMessage MessageType = 1
 )
 
 type Version struct {

@@ -12,7 +12,7 @@ type Account struct {
 	ptr    *C.struct_OlmAccount
 }
 
-// newAccount initializes a new Account.
+// newAccount initializes a Account.
 func newAccount() *Account {
 	buf := make([]byte, C.olm_account_size())
 	ptr := C.olm_account(unsafe.Pointer(&buf[0]))
@@ -78,6 +78,7 @@ func UnpickleAccount(key, pickle string) (*Account, error) {
 }
 
 // Pickle stores the account as a base64 encoded string.
+//
 // C-Function: olm_pickle_account
 func (a *Account) Pickle(key string) (string, error) {
 	keyBytes := []byte(key)
@@ -204,5 +205,13 @@ func (a *Account) GenerateOneTimeKeys(numberOfKeys int) error {
 		unsafe.Pointer(&randBytes[0]), C.size_t(n),
 	)
 
+	return getError(a, result)
+}
+
+// RemoveOneTimeKeys removes the one time keys that the session used from the account.
+//
+// C-Function: olm_remove_one_time_keys
+func (a *Account) RemoveOneTimeKeys(sess *Session) error {
+	result := C.olm_remove_one_time_keys(a.ptr, sess.ptr)
 	return getError(a, result)
 }
