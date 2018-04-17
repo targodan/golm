@@ -50,8 +50,12 @@ type errorTracker interface {
 	lastError() string
 }
 
+func errorCode() C.size_t {
+	return C.olm_error()
+}
+
 func getError(context errorTracker, code C.size_t) error {
-	if code != C.olm_error() {
+	if code != errorCode() {
 		return nil
 	}
 
