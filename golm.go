@@ -18,6 +18,7 @@ const (
 	MessageTypeMessage MessageType = 1
 )
 
+// Version represents a version.
 type Version struct {
 	Major byte
 	Minor byte
@@ -28,6 +29,9 @@ func (v Version) String() string {
 	return fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch)
 }
 
+// GetLibraryVersion returns the library version.
+//
+// C-Function: olm_get_library_version
 func GetLibraryVersion() Version {
 	var major, minor, patch C.uint8_t
 
@@ -67,4 +71,10 @@ type Pickleable interface {
 	// Pickle encodes the object as a base64 string, encrypting it with
 	// the supplied key.
 	Pickle(key string) (string, error)
+}
+
+func panicOnError(err error) {
+	if err != nil {
+		panic(err)
+	}
 }

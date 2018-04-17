@@ -161,10 +161,7 @@ func (s *InboundGroupSession) ID() string {
 	)
 
 	err := getError(s, result)
-	if err != nil {
-		// Should never happen.
-		panic(err)
-	}
+	panicOnError(err)
 
 	return string(idBytes)
 }

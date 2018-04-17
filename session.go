@@ -144,7 +144,7 @@ func UnpickleSession(key, pickle string) (*Session, error) {
 // supplied key.
 //
 // C-Function:
-func (s *Session) Pickle(key string) (string, error) {
+func (s *Session) Pickle(key string) string {
 	keyBytes := []byte(key)
 	pickleBytes := make([]byte, C.olm_pickle_session_length(s.ptr))
 
@@ -155,18 +155,16 @@ func (s *Session) Pickle(key string) (string, error) {
 	)
 
 	err := getError(s, result)
-	if err != nil {
-		return "", err
-	}
+	panicOnError(err)
 
-	return string(pickleBytes[:result]), nil
+	return string(pickleBytes[:result])
 }
 
 // ID returns an identifier for this session. Will be the same for both ends of the
 // conversation.
 //
 // C-Function: olm_session_id
-func (s *Session) ID() (string, error) {
+func (s *Session) ID() string {
 	idBytes := make([]byte, C.olm_session_id_length(s.ptr))
 
 	result := C.olm_session_id(
@@ -175,14 +173,12 @@ func (s *Session) ID() (string, error) {
 	)
 
 	err := getError(s, result)
-	if err != nil {
-		return "", err
-	}
+	panicOnError(err)
 
 	// Note: I didn't trim the bytes because the olm-docs don't specify that
 	// the return value of olm_account_identity_keys amounts to the keysize
 	// on success.
-	return string(idBytes), nil
+	return string(idBytes)
 }
 
 // HasReceivedMessage returns true if this session has received a message.

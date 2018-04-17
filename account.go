@@ -100,9 +100,7 @@ func (a *Account) Pickle(key string) (string, error) {
 	)
 
 	err := getError(a, result)
-	if err != nil {
-		return "", err
-	}
+	panicOnError(err)
 
 	return string(pickleBytes[:result]), nil
 }
@@ -119,9 +117,7 @@ func (a *Account) IdentityKeys() (string, error) {
 	)
 
 	err := getError(a, result)
-	if err != nil {
-		return "", err
-	}
+	panicOnError(err)
 
 	// Note: I didn't trim the bytes because the olm-docs don't specify that
 	// the return value of olm_account_identity_keys amounts to the keysize
@@ -143,9 +139,7 @@ func (a *Account) Sign(message string) (signature string, err error) {
 	)
 
 	err = getError(a, result)
-	if err != nil {
-		return "", err
-	}
+	panicOnError(err)
 
 	return string(signatureBytes), nil
 }
@@ -165,7 +159,7 @@ func (a *Account) Sign(message string) (signature string, err error) {
 //     }
 //
 // C-Function: olm_account_one_time_keys
-func (a *Account) OneTimeKeys() (string, error) {
+func (a *Account) OneTimeKeys() string {
 	keysBytes := make([]byte, C.olm_account_one_time_keys_length(a.ptr))
 
 	result := C.olm_account_one_time_keys(
@@ -174,11 +168,10 @@ func (a *Account) OneTimeKeys() (string, error) {
 	)
 
 	err := getError(a, result)
-	if err != nil {
-		return "", err
-	}
+	// Errors should not happen here.
+	panicOnError(err)
 
-	return string(keysBytes), nil
+	return string(keysBytes)
 }
 
 // MarkKeysAsPublished marks the current set of one time keys as being published.
@@ -190,7 +183,7 @@ func (a *Account) MarkKeysAsPublished() error {
 
 // MaxNumberOfOneTimeKeys returns the largest number of one time keys this account can store.
 //
-// C-Function: olm_account_mark_keys_as_published
+// C-Function: olm_account_max_number_of_one_time_keys
 func (a *Account) MaxNumberOfOneTimeKeys() int {
 	return int(C.olm_account_max_number_of_one_time_keys(a.ptr))
 }

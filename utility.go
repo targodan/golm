@@ -49,9 +49,7 @@ func (u *Utility) SHA256(input string) (string, error) {
 	)
 
 	err := getError(u, result)
-	if err != nil {
-		return "", err
-	}
+	panicOnError(err)
 
 	return string(outputBytes), nil
 }

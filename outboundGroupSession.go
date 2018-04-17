@@ -113,10 +113,7 @@ func (s *OutboundGroupSession) ID() string {
 	)
 
 	err := getError(s, result)
-	if err != nil {
-		// Should never happen.
-		panic(err)
-	}
+	panicOnError(err)
 
 	return string(idBytes)
 }
@@ -135,10 +132,7 @@ func (s *OutboundGroupSession) Encrypt(plaintext string) string {
 	)
 
 	err := getError(s, result)
-	if err != nil {
-		// Should never happen.
-		panic(err)
-	}
+	panicOnError(err)
 
 	return string(messageBytes[:result])
 }
@@ -168,10 +162,7 @@ func (s *OutboundGroupSession) Key() string {
 	)
 
 	err := getError(s, result)
-	if err != nil {
-		// Should never happen.
-		panic(err)
-	}
+	panicOnError(err)
 
 	return string(keyBytes[:result])
 }
