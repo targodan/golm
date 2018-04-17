@@ -27,6 +27,15 @@ func (s *Session) lastError() string {
 	return C.GoString(C.olm_session_last_error(s.ptr))
 }
 
+// Clear clears the memory used to back this Session.
+// Note that once this function was called using the object it
+// was called on will panic.
+//
+// C-Function: olm_clear_inbound_group_session
+func (s *Session) Clear() {
+	C.olm_clear_session(s.ptr)
+}
+
 // NewOutboundSession creates a new out-bound session for sending messages to a given identityKey
 // and oneTimeKey.
 //

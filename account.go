@@ -27,6 +27,15 @@ func (a *Account) lastError() string {
 	return C.GoString(C.olm_account_last_error(a.ptr))
 }
 
+// Clear clears the memory used to back this account.
+// Note that once this function was called using the object it
+// was called on will panic.
+//
+// C-Function: olm_clear_inbound_group_session
+func (a *Account) Clear() {
+	C.olm_clear_account(a.ptr)
+}
+
 // NewAccount creates a new account.
 //
 // C-Function: olm_create_account

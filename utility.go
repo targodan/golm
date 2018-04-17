@@ -11,8 +11,8 @@ type Utility struct {
 	ptr    *C.struct_OlmUtility
 }
 
-// newUtility initializes a Utility.
-func newUtility() *Utility {
+// NewUtility initializes a Utility.
+func NewUtility() *Utility {
 	buf := make([]byte, C.olm_utility_size())
 	ptr := C.olm_utility(unsafe.Pointer(&buf[0]))
 
@@ -24,6 +24,15 @@ func newUtility() *Utility {
 
 func (u *Utility) lastError() string {
 	return C.GoString(C.olm_utility_last_error(u.ptr))
+}
+
+// Clear clears the memory used to back this Utility.
+// Note that once this function was called using the object it
+// was called on will panic.
+//
+// C-Function: olm_clear_inbound_group_session
+func (u *Utility) Clear() {
+	C.olm_clear_utility(u.ptr)
 }
 
 // SHA256 calculates the SHA-256 hash of the input and encodes it as base64.
