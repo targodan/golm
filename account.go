@@ -7,6 +7,7 @@ import (
 	"unsafe"
 )
 
+// Account represents an account with its cryptographic keys.
 type Account struct {
 	memory []byte
 	ptr    *C.struct_OlmAccount

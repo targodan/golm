@@ -6,6 +6,7 @@ import (
 	"unsafe"
 )
 
+// Utility represents a utility object providing utiletarian functions.
 type Utility struct {
 	memory []byte
 	ptr    *C.struct_OlmUtility

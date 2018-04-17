@@ -6,6 +6,8 @@ package golm
 import "C"
 import "unsafe"
 
+// InboundGroupSession represents an inbound group session and its
+// cryptographic keys.
 type InboundGroupSession struct {
 	memory []byte
 	ptr    *C.OlmInboundGroupSession

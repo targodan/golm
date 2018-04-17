@@ -7,6 +7,7 @@ import (
 	"unsafe"
 )
 
+// Session represents a session and its cryptographic keys.
 type Session struct {
 	memory []byte
 	ptr    *C.struct_OlmSession

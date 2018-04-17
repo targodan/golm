@@ -11,10 +11,13 @@ import (
 	"fmt"
 )
 
+// MessageType represents the type of a message.
 type MessageType int
 
 const (
-	MessageTypePreKey  MessageType = 0
+	// MessageTypePreKey is the type of a pre key message.
+	MessageTypePreKey MessageType = 0
+	// MessageTypeMessage is the type of a regular message.
 	MessageTypeMessage MessageType = 1
 )
 
@@ -66,7 +69,7 @@ type Clearable interface {
 	Clear()
 }
 
-// Pickelable objects can be pickled.
+// Pickleable objects can be pickled.
 type Pickleable interface {
 	// Pickle encodes the object as a base64 string, encrypting it with
 	// the supplied key.
