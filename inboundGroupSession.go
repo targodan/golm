@@ -146,7 +146,7 @@ func (s *InboundGroupSession) Decrypt(message string) (plaintext string, index u
 		return
 	}
 
-	return string(plaintextBytes), index, nil
+	return string(plaintextBytes[:result]), index, nil
 }
 
 // ID returns a base64-encoded identifier for this session.
@@ -176,39 +176,33 @@ func (s *InboundGroupSession) FirstKnownIndex() uint32 {
 	return uint32(C.olm_inbound_group_session_first_known_index(s.ptr))
 }
 
-// TODO:
-// /**
-//  * Check if the session has been verified as a valid session.
-//  *
-//  * (A session is verified either because the original session share was signed,
-//  * or because we have subsequently successfully decrypted a message.)
-//  *
-//  * This is mainly intended for the unit tests, currently.
-//  */
-// int olm_inbound_group_session_is_verified(
-//     const OlmInboundGroupSession *session
-// );
+// IsVerified returns true if the session has been verified as a valid session.
 //
-// /**
-//  * Get the number of bytes returned by olm_export_inbound_group_session()
-//  */
-// size_t olm_export_inbound_group_session_length(
-//     const OlmInboundGroupSession *session
-// );
+// A session is verified either because the original session share was signed,
+// or because we have subsequently successfully decrypted a message.
 //
-// /**
-//  * Export the base64-encoded ratchet key for this session, at the given index,
-//  * in a format which can be used by olm_import_inbound_group_session
-//  *
-//  * Returns the length of the ratchet key on success or olm_error() on
-//  * failure. On failure last_error will be set with an error code. The
-//  * last_error will be:
-//  *   * OUTPUT_BUFFER_TOO_SMALL if the buffer was too small
-//  *   * OLM_UNKNOWN_MESSAGE_INDEX  if we do not have a session key corresponding to the
-//  *     given index (ie, it was sent before the session key was shared with
-//  *     us)
-//  */
-// size_t olm_export_inbound_group_session(
-//     OlmInboundGroupSession *session,
-//     uint8_t * key, size_t key_length, uint32_t message_index
-// );
+// C-Function: olm_inbound_group_session_is_verified
+func (s *InboundGroupSession) IsVerified() bool {
+	return C.olm_inbound_group_session_is_verified(s.ptr) != 0
+}
+
+// Export exports the base64-encoded ratchet key for this session, at the given index,
+// in a format which can be used by ImportInboundGroupSession.
+//
+// C-Function: olm_export_inbound_group_session
+func (s *InboundGroupSession) Export(messageIndex uint32) (string, error) {
+	keyBytes := make([]byte, C.olm_export_inbound_group_session_length(s.ptr))
+
+	result := C.olm_export_inbound_group_session(
+		s.ptr,
+		(*C.uint8_t)(unsafe.Pointer(&keyBytes[0])), C.size_t(len(keyBytes)),
+		C.uint32_t(messageIndex),
+	)
+
+	err := getError(s, result)
+	if err != nil {
+		return "", err
+	}
+
+	return string(keyBytes[:result]), nil
+}
