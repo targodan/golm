@@ -27,10 +27,10 @@ func (a *Account) lastError() string {
 	return C.GoString(C.olm_account_last_error(a.ptr))
 }
 
-// CreateAccount creates a new account.
+// NewAccount creates a new account.
 //
 // C-Function: olm_create_account
-func CreateAccount() (*Account, error) {
+func NewAccount() (*Account, error) {
 	acc := newAccount()
 	reqLength := C.olm_create_account_random_length(acc.ptr)
 	randBytes := make([]byte, reqLength)
