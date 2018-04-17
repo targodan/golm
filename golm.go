@@ -3,7 +3,7 @@
 // https://github.com/matrix-org/olm
 package golm
 
-//#cgo LDFLAGS: -lolm -Wl,-rpath -Wl,/usr/local/lib
+//#cgo LDFLAGS: -lolm
 //#include <olm/olm.h>
 import "C"
 import (
