@@ -55,3 +55,16 @@ func getError(context errorTracker, code C.size_t) error {
 
 	return errors.New(msg)
 }
+
+// Clearable objects can clear their memory.
+type Clearable interface {
+	// Clear clears the memory of the object invalidating it as a result.
+	Clear()
+}
+
+// Pickelable objects can be pickled.
+type Pickleable interface {
+	// Pickle encodes the object as a base64 string, encrypting it with
+	// the supplied key.
+	Pickle(key string) (string, error)
+}
