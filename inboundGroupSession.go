@@ -173,7 +173,7 @@ func (s *InboundGroupSession) ID() string {
 //
 // C-Function: olm_inbound_group_session_first_known_index
 func (s *InboundGroupSession) FirstKnownIndex() uint32 {
-	return C.olm_inbound_group_session_first_known_index(s.ptr)
+	return uint32(C.olm_inbound_group_session_first_known_index(s.ptr))
 }
 
 // TODO:
