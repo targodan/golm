@@ -1,3 +1,4 @@
+//go:generate mockgen -package golm -destination reader_gen_test.go io Reader
 package golm
 
 import (

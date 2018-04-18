@@ -4,6 +4,7 @@ package golm
 import "C"
 import (
 	"crypto/rand"
+	"errors"
 	"unsafe"
 )
 
@@ -56,9 +57,8 @@ func NewAccount() (*Account, error) {
 	)
 
 	err = getError(acc, result)
-	if err != nil {
-		return nil, err
-	}
+	// Only NOT_ENOUGH_RANDOM can happen according to docs, which will never happen here.
+	panicOnError(err)
 
 	return acc, nil
 }
@@ -68,6 +68,10 @@ func NewAccount() (*Account, error) {
 //
 // C-Function: olm_unpickle_account
 func UnpickleAccount(key, pickle string) (*Account, error) {
+	if len(key) == 0 {
+		return nil, errors.New("key must not be empty")
+	}
+
 	acc := newAccount()
 
 	keyBytes := []byte(key)
@@ -91,6 +95,10 @@ func UnpickleAccount(key, pickle string) (*Account, error) {
 //
 // C-Function: olm_pickle_account
 func (a *Account) Pickle(key string) (string, error) {
+	if len(key) == 0 {
+		return "", errors.New("key must not be empty")
+	}
+
 	keyBytes := []byte(key)
 	pickleBytes := make([]byte, C.olm_pickle_account_length(a.ptr))
 
@@ -109,7 +117,7 @@ func (a *Account) Pickle(key string) (string, error) {
 // IdentityKeys returns the accounts identity keys.
 //
 // C-Function: olm_account_identity_keys
-func (a *Account) IdentityKeys() (string, error) {
+func (a *Account) IdentityKeys() string {
 	keyBytes := make([]byte, C.olm_account_identity_keys_length(a.ptr))
 
 	result := C.olm_account_identity_keys(
@@ -123,13 +131,17 @@ func (a *Account) IdentityKeys() (string, error) {
 	// Note: I didn't trim the bytes because the olm-docs don't specify that
 	// the return value of olm_account_identity_keys amounts to the keysize
 	// on success.
-	return string(keyBytes), nil
+	return string(keyBytes)
 }
 
 // Sign signs a message with the ed25519 key for this account.
 //
 // C-Function: olm_account_sign
 func (a *Account) Sign(message string) (signature string, err error) {
+	if len(message) == 0 {
+		return "", errors.New("message must not be empty")
+	}
+
 	messageBytes := []byte(message)
 	signatureBytes := make([]byte, C.olm_account_signature_length(a.ptr))
 
