@@ -31,12 +31,12 @@ before_install:
     - git clone https://git.matrix.org/git/olm.git
     - cd olm
     - git checkout $GOLM_VERSION
-    - make -j12 test
-    - make PREFIX=$HOME install
+    - make -j12 PREFIX=$HOME test install
     - popd
 
 install:
     - export CGO_CFLAGS=-I${HOME}/include
+    - go generate ./...
     - go get -t -v ./...
 
 script:
