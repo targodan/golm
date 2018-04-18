@@ -10,8 +10,8 @@ import (
 )
 
 func TestGetLibraryVersion(t *testing.T) {
-	expectedVersion := os.Getenv("GOLM_EXPECTED_VERSION")
-	if expectedVersion != "" {
+	expectedVersion := os.Getenv("GOLM_VERSION")
+	if expectedVersion != "" && expectedVersion != "master" {
 		// Check against exact version
 		Convey("GetLibraryVersion should match the expected version.", t, func() {
 			So(GetLibraryVersion().String(), ShouldEqual, expectedVersion)

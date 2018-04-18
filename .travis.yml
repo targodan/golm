@@ -1,0 +1,44 @@
+language: go
+
+go:
+    - 1.7
+    - 1.6
+    - 1.5
+    - 1.4
+    - tip
+
+env:
+    matrix:
+        - GOLM_VERSION=2.2.2
+        - GOLM_VERSION=2.2.1
+        - GOLM_VERSION=2.2.0
+        - GOLM_VERSION=2.1.0
+        - GOLM_VERSION=2.0.0
+        - GOLM_VERSION=master
+
+matrix:
+    fast_finish: true
+    allow_failures:
+        - go: tip
+        - env: GOLM_VERSION=master
+
+go_import_path: github.com/targodan/golm
+
+before_install:
+    - pushd $HOME
+    - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/lib
+    - export LIBRARY_PATH=$LIBRARY_PATH:$HOME/lib
+    - git clone https://git.matrix.org/git/olm.git
+    - cd olm
+    - git checkout $GOLM_VERSION
+    - make -j12 test
+    - make PREFIX=$HOME install
+    - popd
+
+install:
+    - export CGO_CFLAGS=-I${HOME}/include
+    - go get -t -v ./...
+
+script:
+    - go build -v
+    - go test -v -cover -race ./...
