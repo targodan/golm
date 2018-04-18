@@ -1,10 +1,11 @@
 language: go
 
 go:
+    - 1.10
+    - 1.9
+    - 1.8
     - 1.7
     - 1.6
-    - 1.5
-    - 1.4
     - tip
 
 env:
@@ -12,8 +13,6 @@ env:
         - GOLM_VERSION=2.2.2
         - GOLM_VERSION=2.2.1
         - GOLM_VERSION=2.2.0
-        - GOLM_VERSION=2.1.0
-        - GOLM_VERSION=2.0.0
         - GOLM_VERSION=master
 
 matrix:
