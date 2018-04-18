@@ -36,9 +36,9 @@ before_install:
 
 install:
     - export CGO_CFLAGS=-I${HOME}/include
-    - go get -v github.com/golang/mock/mockgen
+    - go get -u -v github.com/golang/mock/mockgen
     - go generate ./...
-    - go get -v ./...
+    - go get -u -v ./...
 
 script:
     - go build -v
