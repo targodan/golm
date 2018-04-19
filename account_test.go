@@ -20,7 +20,7 @@ func TestNewAccount(t *testing.T) {
 
 		mock.EXPECT().Read(gomock.Any()).Return(0, errors.New("some error"))
 
-		sw := SwitchRandSource(mock)
+		sw := switchRandSource(mock)
 		defer sw.Revert()
 
 		acc, err := NewAccount()
@@ -136,7 +136,7 @@ func TestAccountGenerateOneTimeKeys(t *testing.T) {
 
 		acc, _ := NewAccount()
 
-		sw := SwitchRandSource(mock)
+		sw := switchRandSource(mock)
 		defer sw.Revert()
 
 		err := acc.GenerateOneTimeKeys(1)

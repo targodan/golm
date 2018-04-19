@@ -39,7 +39,7 @@ func TestNewOutboundSession(t *testing.T) {
 
 				mock.EXPECT().Read(gomock.Any()).Return(0, errors.New("some error"))
 
-				sw := SwitchRandSource(mock)
+				sw := switchRandSource(mock)
 				defer sw.Revert()
 
 				sess, err := NewOutboundSession(from, toIdentity.Curve25519, toOneTimeKeys.Curve(0))

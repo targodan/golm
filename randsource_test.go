@@ -13,7 +13,7 @@ type randsourceSwitcher struct {
 	mutex sync.Mutex
 }
 
-func SwitchRandSource(newSource io.Reader) *randsourceSwitcher {
+func switchRandSource(newSource io.Reader) *randsourceSwitcher {
 	if sw == nil {
 		sw = &randsourceSwitcher{}
 	}
