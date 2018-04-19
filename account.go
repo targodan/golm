@@ -115,13 +115,6 @@ func (a *Account) Pickle(key string) (string, error) {
 	return string(pickleBytes[:result]), nil
 }
 
-// KeyPair contains a key par, consisting of a Curve25519
-// and a corresponding ED25519 key.
-type KeyPair struct {
-	Curve25519 string `json:"curve25519"`
-	ED25519    string `json:"ed25519"`
-}
-
 // IdentityKeys returns the accounts identity keys.
 //
 // C-Function: olm_account_identity_keys
@@ -163,26 +156,6 @@ func (a *Account) Sign(message string) (signature string, err error) {
 	panicOnError(err)
 
 	return string(signatureBytes), nil
-}
-
-// OneTimeKeys contains multiple Curve25519 keys.
-type OneTimeKeys struct {
-	Curve25519 map[string]string `json:"curve25519"`
-}
-
-// Curve returns the n-th curve25519 key.
-func (otk *OneTimeKeys) Curve(n int) string {
-	if n < 0 || n >= len(otk.Curve25519) {
-		return ""
-	}
-	i := 0
-	for _, key := range otk.Curve25519 {
-		if i == n {
-			return key
-		}
-		i++
-	}
-	return ""
 }
 
 // OneTimeKeys returns the public parts of the unpublished one time keys

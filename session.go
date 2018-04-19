@@ -80,6 +80,10 @@ func NewOutboundSession(account *Account, theirIdentityKey, theirOneTimeKey stri
 //
 // C-Function: olm_create_inbound_session
 func NewInboundSession(account *Account, oneTimeKeyMessage string) (*Session, error) {
+	if oneTimeKeyMessage == "" {
+		return nil, errors.New("oneTimeKeyMessage must not be empty")
+	}
+
 	sess := newSession()
 
 	keyMessageBytes := []byte(oneTimeKeyMessage)
@@ -103,6 +107,13 @@ func NewInboundSession(account *Account, oneTimeKeyMessage string) (*Session, er
 //
 // C-Function: olm_create_inbound_session_from
 func NewInboundSessionFrom(account *Account, theirIdentityKey string, oneTimeKeyMessage string) (*Session, error) {
+	if theirIdentityKey == "" {
+		return nil, errors.New("theirIdentityKey must not be empty")
+	}
+	if oneTimeKeyMessage == "" {
+		return nil, errors.New("oneTimeKeyMessage must not be empty")
+	}
+
 	sess := newSession()
 
 	identKeyBytes := []byte(theirIdentityKey)
@@ -258,10 +269,10 @@ func (s *Session) Encrypt(plaintext string) (string, MessageType, error) {
 
 	plaintextBytes := []byte(plaintext)
 
-	randomBytes := make([]byte, C.olm_encrypt_random_length(s.ptr))
+	// At least provide 1 random byte, otherwise we'll get an
+	// "index out of bounds"-error.
+	randomBytes := make([]byte, C.olm_encrypt_random_length(s.ptr)+1)
 	messageBytes := make([]byte, C.olm_encrypt_message_length(s.ptr, C.size_t(len(plaintextBytes))))
-
-	plaintextCStr := C.CString(plaintext)
 
 	n, err := rand.Read(randomBytes)
 	if err != nil {
@@ -270,16 +281,13 @@ func (s *Session) Encrypt(plaintext string) (string, MessageType, error) {
 
 	result := C.olm_encrypt(
 		s.ptr,
-		unsafe.Pointer(plaintextCStr), C.size_t(len(plaintextBytes)),
-		// unsafe.Pointer(&plaintextBytes[0]), C.size_t(len(plaintextBytes)),
+		unsafe.Pointer(&plaintextBytes[0]), C.size_t(len(plaintextBytes)),
 		unsafe.Pointer(&randomBytes[0]), C.size_t(n),
 		unsafe.Pointer(&messageBytes[0]), C.size_t(len(messageBytes)),
 	)
 
 	err = getError(s, result)
-	if err != nil {
-		return "", -1, err
-	}
+	panicOnError(err)
 
 	return string(messageBytes[:result]), MessageType(msgType), nil
 }

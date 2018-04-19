@@ -10,6 +10,9 @@ import (
 
 func TestNewAccount(t *testing.T) {
 	Convey("Creating an account with enough random should work.", t, func() {
+		sw := guardRandSource()
+		defer sw.Free()
+
 		acc, err := NewAccount()
 		So(err, ShouldBeNil)
 		So(acc.lastError(), ShouldEqual, "SUCCESS")
@@ -124,6 +127,9 @@ func TestAccountMaxOneTimeKeys(t *testing.T) {
 
 func TestAccountGenerateOneTimeKeys(t *testing.T) {
 	Convey("Generating more one time keys with a valid random source should work.", t, func() {
+		sw := guardRandSource()
+		defer sw.Free()
+
 		acc, _ := NewAccount()
 		err := acc.GenerateOneTimeKeys(1)
 		So(err, ShouldBeNil)
