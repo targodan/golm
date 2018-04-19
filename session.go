@@ -1,9 +1,11 @@
 package golm
 
 //#include <olm/olm.h>
+//#include <string.h>
 import "C"
 import (
 	"crypto/rand"
+	"errors"
 	"unsafe"
 )
 
@@ -42,6 +44,10 @@ func (s *Session) Clear() {
 //
 // C-Function: olm_create_inbound_session
 func NewOutboundSession(account *Account, theirIdentityKey, theirOneTimeKey string) (*Session, error) {
+	if theirIdentityKey == "" || theirOneTimeKey == "" {
+		return nil, errors.New("the keys must not be empty")
+	}
+
 	sess := newSession()
 
 	identKeyBytes := []byte(theirIdentityKey)
@@ -120,8 +126,15 @@ func NewInboundSessionFrom(account *Account, theirIdentityKey string, oneTimeKey
 // UnpickleSession loads an session from a pickled base64 string.
 // Decrypts the account using the supplied key.
 //
-// C-Function: olm_unpickle_account
+// C-Function: olm_unpickle_session
 func UnpickleSession(key, pickle string) (*Session, error) {
+	if key == "" {
+		return nil, errors.New("key must not be empty")
+	}
+	if pickle == "" {
+		return nil, errors.New("pickle must not be empty")
+	}
+
 	sess := newSession()
 
 	keyBytes := []byte(key)
@@ -144,8 +157,12 @@ func UnpickleSession(key, pickle string) (*Session, error) {
 // Pickle stores a session as a base64 string. Encrypts the session using the
 // supplied key.
 //
-// C-Function:
-func (s *Session) Pickle(key string) string {
+// C-Function: olm_pickle_session
+func (s *Session) Pickle(key string) (string, error) {
+	if key == "" {
+		return "", errors.New("key must not be empty")
+	}
+
 	keyBytes := []byte(key)
 	pickleBytes := make([]byte, C.olm_pickle_session_length(s.ptr))
 
@@ -158,7 +175,7 @@ func (s *Session) Pickle(key string) string {
 	err := getError(s, result)
 	panicOnError(err)
 
-	return string(pickleBytes[:result])
+	return string(pickleBytes[:result]), nil
 }
 
 // ID returns an identifier for this session. Will be the same for both ends of the

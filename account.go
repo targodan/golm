@@ -4,6 +4,7 @@ package golm
 import "C"
 import (
 	"crypto/rand"
+	"encoding/json"
 	"errors"
 	"unsafe"
 )
@@ -114,10 +115,17 @@ func (a *Account) Pickle(key string) (string, error) {
 	return string(pickleBytes[:result]), nil
 }
 
+// KeyPair contains a key par, consisting of a Curve25519
+// and a corresponding ED25519 key.
+type KeyPair struct {
+	Curve25519 string `json:"curve25519"`
+	ED25519    string `json:"ed25519"`
+}
+
 // IdentityKeys returns the accounts identity keys.
 //
 // C-Function: olm_account_identity_keys
-func (a *Account) IdentityKeys() string {
+func (a *Account) IdentityKeys() *KeyPair {
 	keyBytes := make([]byte, C.olm_account_identity_keys_length(a.ptr))
 
 	result := C.olm_account_identity_keys(
@@ -128,10 +136,10 @@ func (a *Account) IdentityKeys() string {
 	err := getError(a, result)
 	panicOnError(err)
 
-	// Note: I didn't trim the bytes because the olm-docs don't specify that
-	// the return value of olm_account_identity_keys amounts to the keysize
-	// on success.
-	return string(keyBytes)
+	pair := &KeyPair{}
+	json.Unmarshal(keyBytes, pair)
+
+	return pair
 }
 
 // Sign signs a message with the ed25519 key for this account.
@@ -157,6 +165,26 @@ func (a *Account) Sign(message string) (signature string, err error) {
 	return string(signatureBytes), nil
 }
 
+// OneTimeKeys contains multiple Curve25519 keys.
+type OneTimeKeys struct {
+	Curve25519 map[string]string `json:"curve25519"`
+}
+
+// Curve returns the n-th curve25519 key.
+func (otk *OneTimeKeys) Curve(n int) string {
+	if n < 0 || n >= len(otk.Curve25519) {
+		return ""
+	}
+	i := 0
+	for _, key := range otk.Curve25519 {
+		if i == n {
+			return key
+		}
+		i++
+	}
+	return ""
+}
+
 // OneTimeKeys returns the public parts of the unpublished one time keys
 // for the account into the one_time_keys output buffer.
 //
@@ -172,7 +200,7 @@ func (a *Account) Sign(message string) (signature string, err error) {
 //     }
 //
 // C-Function: olm_account_one_time_keys
-func (a *Account) OneTimeKeys() string {
+func (a *Account) OneTimeKeys() *OneTimeKeys {
 	keysBytes := make([]byte, C.olm_account_one_time_keys_length(a.ptr))
 
 	result := C.olm_account_one_time_keys(
@@ -184,7 +212,10 @@ func (a *Account) OneTimeKeys() string {
 	// Errors should not happen here.
 	panicOnError(err)
 
-	return string(keysBytes)
+	keys := &OneTimeKeys{}
+	json.Unmarshal(keysBytes, keys)
+
+	return keys
 }
 
 // MarkKeysAsPublished marks the current set of one time keys as being published.
