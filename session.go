@@ -250,11 +250,18 @@ func (s *Session) MatchesInboundSessionFrom(theirIdentityKey, oneTimeKeyMessage 
 //
 // C-Function: olm_encrypt
 func (s *Session) Encrypt(plaintext string) (string, MessageType, error) {
+	if plaintext == "" {
+		return "", -1, errors.New("plaintext must not be empty")
+	}
+
 	msgType := C.olm_encrypt_message_type(s.ptr)
 
 	plaintextBytes := []byte(plaintext)
+
 	randomBytes := make([]byte, C.olm_encrypt_random_length(s.ptr))
 	messageBytes := make([]byte, C.olm_encrypt_message_length(s.ptr, C.size_t(len(plaintextBytes))))
+
+	plaintextCStr := C.CString(plaintext)
 
 	n, err := rand.Read(randomBytes)
 	if err != nil {
@@ -263,7 +270,8 @@ func (s *Session) Encrypt(plaintext string) (string, MessageType, error) {
 
 	result := C.olm_encrypt(
 		s.ptr,
-		unsafe.Pointer(&plaintextBytes[0]), C.size_t(len(plaintextBytes)),
+		unsafe.Pointer(plaintextCStr), C.size_t(len(plaintextBytes)),
+		// unsafe.Pointer(&plaintextBytes[0]), C.size_t(len(plaintextBytes)),
 		unsafe.Pointer(&randomBytes[0]), C.size_t(n),
 		unsafe.Pointer(&messageBytes[0]), C.size_t(len(messageBytes)),
 	)

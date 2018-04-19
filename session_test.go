@@ -2,6 +2,7 @@ package golm
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -131,5 +132,34 @@ func TestSessionID(t *testing.T) {
 	Convey("Getting an ID should work.", t, func() {
 		id := sess.ID()
 		So(id, ShouldNotBeEmpty)
+	})
+}
+
+func TestSessionHasReceivedMessage(t *testing.T) {
+	sess, _, _ := createOutboundSession()
+
+	Convey("Querying if the session has received messages should not panic.", t, func() {
+		So(func() {
+			sess.HasReceivedMessage()
+		}, ShouldNotPanic)
+	})
+}
+
+func TestSessionEcrypt(t *testing.T) {
+	sess, _, _ := createOutboundSession()
+
+	Convey("Encrypting", t, func() {
+		Convey("with a valid random source", func() {
+			Convey("a non-empty message should work.", func() {
+				cipher, t, err := sess.Encrypt("some plaintext")
+
+				fmt.Println(cipher)
+				fmt.Println(t)
+				fmt.Println(err)
+
+				So(err, ShouldBeNil)
+				So(cipher, ShouldNotBeEmpty)
+			})
+		})
 	})
 }
