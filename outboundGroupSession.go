@@ -93,6 +93,13 @@ func (s *OutboundGroupSession) Pickle(key string) (string, error) {
 //
 // C-Function: olm_unpickle_outbound_group_session
 func UnpickleOutboundGroupSession(key, pickle string) (*OutboundGroupSession, error) {
+	if key == "" {
+		return nil, errors.New("key must not be empty")
+	}
+	if pickle == "" {
+		return nil, errors.New("pickle must not be empty")
+	}
+
 	s := newOutboundGroupSession()
 
 	keyBytes := []byte(key)
@@ -132,7 +139,11 @@ func (s *OutboundGroupSession) ID() string {
 // Encrypt encrypts some plain-text.
 //
 // C-Function: olm_group_encrypt
-func (s *OutboundGroupSession) Encrypt(plaintext string) string {
+func (s *OutboundGroupSession) Encrypt(plaintext string) (string, error) {
+	if plaintext == "" {
+		return "", errors.New("plaintext must not be empty")
+	}
+
 	plainBytes := []byte(plaintext)
 	messageBytes := make([]byte, C.olm_group_encrypt_message_length(s.ptr, C.size_t(len(plainBytes))))
 
@@ -145,7 +156,7 @@ func (s *OutboundGroupSession) Encrypt(plaintext string) string {
 	err := getError(s, result)
 	panicOnError(err)
 
-	return string(messageBytes[:result])
+	return string(messageBytes[:result]), nil
 }
 
 // MessageIndex returns the current message index for this session.

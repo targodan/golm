@@ -58,3 +58,73 @@ func TestOutboundGroupSessionPickle(t *testing.T) {
 		})
 	})
 }
+
+func TestOutboundGroupSessionUnpickle(t *testing.T) {
+	_sess, _ := NewOutboundGroupSession()
+	pickle, _ := _sess.Pickle("AA")
+
+	Convey("Unpickleing an outbound group session", t, func() {
+		Convey("with the correct key should work.", func() {
+			sess, err := UnpickleOutboundGroupSession("AA", pickle)
+			So(err, ShouldBeNil)
+			So(sess, ShouldNotBeNil)
+		})
+		Convey("with an incorrect key should not work.", func() {
+			sess, err := UnpickleOutboundGroupSession("invalid", pickle)
+			So(err, ShouldNotBeNil)
+			So(sess, ShouldBeNil)
+		})
+		Convey("with an empty key should not panic.", func() {
+			So(func() {
+				UnpickleOutboundGroupSession("", pickle)
+			}, ShouldNotPanic)
+		})
+		Convey("with an empty pickle should not panic.", func() {
+			So(func() {
+				UnpickleOutboundGroupSession("AA", "")
+			}, ShouldNotPanic)
+		})
+	})
+}
+
+func TestOutgoingGroupSessionID(t *testing.T) {
+	sess, _ := NewOutboundGroupSession()
+	Convey("Getting an ID from an OutgoingGroupSesison should work.", t, func() {
+		id := sess.ID()
+		So(id, ShouldNotBeEmpty)
+	})
+}
+
+func TestOutgoingGroupSessionKey(t *testing.T) {
+	sess, _ := NewOutboundGroupSession()
+	Convey("Getting the key from an OutgoingGroupSesison should work.", t, func() {
+		key := sess.Key()
+		So(key, ShouldNotBeEmpty)
+	})
+}
+
+func TestOutgoingGroupSessionMessageIndex(t *testing.T) {
+	sess, _ := NewOutboundGroupSession()
+	Convey("Getting the message index from an OutgoingGroupSesison should not panic.", t, func() {
+		So(func() {
+			sess.MessageIndex()
+		}, ShouldNotPanic)
+	})
+}
+
+func TestOutgoingGroupSessionEncrypt(t *testing.T) {
+	sess, _ := NewOutboundGroupSession()
+
+	Convey("Ecrypting", t, func() {
+		Convey("a non-empty message should work.", func() {
+			cipher, err := sess.Encrypt("plaintext")
+			So(err, ShouldBeNil)
+			So(cipher, ShouldNotBeEmpty)
+		})
+		Convey("an empty message should not panic.", func() {
+			So(func() {
+				sess.Encrypt("")
+			}, ShouldNotPanic)
+		})
+	})
+}

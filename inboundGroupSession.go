@@ -4,7 +4,10 @@ package golm
 //#include <stdlib.h>
 //#include <string.h>
 import "C"
-import "unsafe"
+import (
+	"errors"
+	"unsafe"
+)
 
 // InboundGroupSession represents an inbound group session and its
 // cryptographic keys.
@@ -27,6 +30,10 @@ func newInboundGroupSession() *InboundGroupSession {
 //
 // C-Function: olm_init_inbound_group_session
 func NewInboundGroupSession(sessionKey string) (*InboundGroupSession, error) {
+	if sessionKey == "" {
+		return nil, errors.New("session key must not be empty")
+	}
+
 	s := newInboundGroupSession()
 
 	sessionKeyBytes := []byte(sessionKey)
@@ -62,6 +69,10 @@ func (s *InboundGroupSession) Clear() {
 //
 // C-Function: olm_pickle_inbound_group_session
 func (s *InboundGroupSession) Pickle(key string) (string, error) {
+	if key == "" {
+		return "", errors.New("key must not be empty")
+	}
+
 	keyBytes := []byte(key)
 	pickleBytes := make([]byte, C.olm_pickle_inbound_group_session_length(s.ptr))
 
@@ -72,9 +83,7 @@ func (s *InboundGroupSession) Pickle(key string) (string, error) {
 	)
 
 	err := getError(s, result)
-	if err != nil {
-		return "", err
-	}
+	panicOnError(err)
 
 	return string(pickleBytes[:result]), nil
 }
@@ -84,6 +93,13 @@ func (s *InboundGroupSession) Pickle(key string) (string, error) {
 //
 // C-Function: olm_unpickle_inbound_group_session
 func UnpickleInboundGroupSession(key, pickle string) (*InboundGroupSession, error) {
+	if key == "" {
+		return nil, errors.New("key must not be empty")
+	}
+	if pickle == "" {
+		return nil, errors.New("pickle must not be empty")
+	}
+
 	s := newInboundGroupSession()
 
 	keyBytes := []byte(key)
@@ -107,6 +123,10 @@ func UnpickleInboundGroupSession(key, pickle string) (*InboundGroupSession, erro
 //
 // C-Function: olm_import_inbound_group_session
 func ImportInboundGroupSession(sessionKey string) (*InboundGroupSession, error) {
+	if sessionKey == "" {
+		return nil, errors.New("session key must not be empty")
+	}
+
 	s := newInboundGroupSession()
 
 	sessionKeyBytes := []byte(sessionKey)
@@ -128,13 +148,22 @@ func ImportInboundGroupSession(sessionKey string) (*InboundGroupSession, error) 
 //
 // C-Function: olm_group_decrypt
 func (s *InboundGroupSession) Decrypt(message string) (plaintext string, index uint32, err error) {
+	if message == "" {
+		return "", 0, errors.New("message must not be empty")
+	}
+
 	messageBytes := []byte(message)
 	unsignedMsgBytes := (*C.uint8_t)(unsafe.Pointer(&messageBytes[0]))
 	messageSize := C.size_t(len(messageBytes))
 
+	// This destroyes the input buffer...
 	plaintextLength := C.olm_group_decrypt_max_plaintext_length(s.ptr, unsignedMsgBytes, messageSize)
 	plaintextBytes := make([]byte, plaintextLength)
 	unsignedPlainBytes := (*C.uint8_t)(unsafe.Pointer(&plaintextBytes[0]))
+
+	// ...hence we need to create it again.
+	messageBytes = []byte(message)
+	unsignedMsgBytes = (*C.uint8_t)(unsafe.Pointer(&messageBytes[0]))
 
 	result := C.olm_group_decrypt(
 		s.ptr,
