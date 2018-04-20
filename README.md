@@ -10,6 +10,10 @@ Only exception to this is `create-` functions they are renamed to `New-` functio
 
 If you are looking for a specific C function go to the [documentation of this binding](https://godoc.org/github.com/targodan/golm) and simply search for it there.
 
+## Return values
+
+Whenever a libolm function returns a JSON string this binding will parse it and return a concrete type.
+
 ## Behaviour
 
 This binding strives to make the libolm feel like go. As a result this library *should only ever* panic if the developer did something wrong in a static way.
