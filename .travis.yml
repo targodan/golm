@@ -51,4 +51,6 @@ install:
 script:
     - go build -v
     - go test -v -race -covermode=atomic -coverprofile=coverage.out ./...
+
+after_script:
     - goveralls -covermode=atomic -coverprofile=coverage.out -service=travis-ci -repotoken "$COVERALLS_TOKEN"
