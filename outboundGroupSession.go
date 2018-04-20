@@ -4,7 +4,11 @@ package golm
 //#include <stdlib.h>
 //#include <string.h>
 import "C"
-import "unsafe"
+import (
+	"crypto/rand"
+	"errors"
+	"unsafe"
+)
 
 // OutboundGroupSession represents an outbound group session
 // and its cryptographic keys.
@@ -26,20 +30,23 @@ func newOutboundGroupSession() *OutboundGroupSession {
 // an outbound group session key.
 //
 // C-Function: olm_init_outbound_group_session
-func NewOutboundGroupSession(sessionKey string) (*OutboundGroupSession, error) {
+func NewOutboundGroupSession() (*OutboundGroupSession, error) {
 	s := newOutboundGroupSession()
 
-	sessionKeyBytes := []byte(sessionKey)
+	randomBytes := make([]byte, C.olm_init_outbound_group_session_random_length(s.ptr))
 
-	result := C.olm_init_outbound_group_session(
-		s.ptr,
-		(*C.uint8_t)(unsafe.Pointer(&sessionKeyBytes[0])), C.size_t(len(sessionKeyBytes)),
-	)
-
-	err := getError(s, result)
+	n, err := rand.Read(randomBytes)
 	if err != nil {
 		return nil, err
 	}
+
+	result := C.olm_init_outbound_group_session(
+		s.ptr,
+		(*C.uint8_t)(unsafe.Pointer(&randomBytes[0])), C.size_t(n),
+	)
+
+	err = getError(s, result)
+	panicOnError(err)
 
 	return s, nil
 }
@@ -62,6 +69,10 @@ func (s *OutboundGroupSession) Clear() {
 //
 // C-Function: olm_pickle_outbound_group_session
 func (s *OutboundGroupSession) Pickle(key string) (string, error) {
+	if key == "" {
+		return "", errors.New("key must not be empty")
+	}
+
 	keyBytes := []byte(key)
 	pickleBytes := make([]byte, C.olm_pickle_outbound_group_session_length(s.ptr))
 
@@ -72,9 +83,7 @@ func (s *OutboundGroupSession) Pickle(key string) (string, error) {
 	)
 
 	err := getError(s, result)
-	if err != nil {
-		return "", err
-	}
+	panicOnError(err)
 
 	return string(pickleBytes[:result]), nil
 }
