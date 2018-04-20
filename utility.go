@@ -3,6 +3,7 @@ package golm
 //#include <olm/olm.h>
 import "C"
 import (
+	"errors"
 	"unsafe"
 )
 
@@ -39,7 +40,7 @@ func (u *Utility) Clear() {
 // SHA256 calculates the SHA-256 hash of the input and encodes it as base64.
 //
 // C-Function: olm_sha256
-func (u *Utility) SHA256(input string) (string, error) {
+func (u *Utility) SHA256(input string) string {
 	inputBytes := []byte(input)
 	outputBytes := make([]byte, C.olm_sha256_length(u.ptr))
 
@@ -52,13 +53,23 @@ func (u *Utility) SHA256(input string) (string, error) {
 	err := getError(u, result)
 	panicOnError(err)
 
-	return string(outputBytes), nil
+	return string(outputBytes)
 }
 
 // ED25519Verify verifies an ed25519 signature.
 //
 // C-Function: olm_ed25519_verify
 func (u *Utility) ED25519Verify(key, message, signature string) error {
+	if key == "" {
+		return errors.New("key must not be empty")
+	}
+	if message == "" {
+		return errors.New("message must not be empty")
+	}
+	if signature == "" {
+		return errors.New("signature must not be empty")
+	}
+
 	keyBytes := []byte(key)
 	messageBytes := []byte(message)
 	signatureBytes := []byte(signature)
