@@ -221,6 +221,10 @@ func (s *Session) HasReceivedMessage() bool {
 //
 // C-Function: olm_matches_inbound_session
 func (s *Session) MatchesInboundSession(oneTimeKeyMessage string) (bool, error) {
+	if oneTimeKeyMessage == "" {
+		return false, errors.New("message must not be empty")
+	}
+
 	keyBytes := []byte(oneTimeKeyMessage)
 
 	result := C.olm_matches_inbound_session(
@@ -240,6 +244,13 @@ func (s *Session) MatchesInboundSession(oneTimeKeyMessage string) (bool, error) 
 //
 // C-Function: olm_matches_inbound_session_from
 func (s *Session) MatchesInboundSessionFrom(theirIdentityKey, oneTimeKeyMessage string) (bool, error) {
+	if theirIdentityKey == "" {
+		return false, errors.New("identity key must not be empty")
+	}
+	if oneTimeKeyMessage == "" {
+		return false, errors.New("message must not be empty")
+	}
+
 	identKeyBytes := []byte(theirIdentityKey)
 	keyMessageBytes := []byte(oneTimeKeyMessage)
 
@@ -294,13 +305,24 @@ func (s *Session) Encrypt(plaintext string) (string, MessageType, error) {
 
 // Decrypt decrypts a message using the session.
 //
-// TODO: Find out what "The input buffer is destroyed." means in this context and
-// if we need to handle this somehow.
-//
 // C-Function: olm_decrypt
 func (s *Session) Decrypt(typ MessageType, message string) (string, error) {
+	if message == "" {
+		return "", errors.New("message must not be empty")
+	}
+
 	messageBytes := []byte(message)
-	plaintextBytes := make([]byte, C.olm_decrypt_max_plaintext_length(s.ptr, C.size_t(typ), unsafe.Pointer(&messageBytes[0]), C.size_t(len(messageBytes))))
+
+	// The message buffer is destroyed...
+	plaintextLength := C.olm_decrypt_max_plaintext_length(s.ptr, C.size_t(typ), unsafe.Pointer(&messageBytes[0]), C.size_t(len(messageBytes)))
+	err := getError(s, plaintextLength)
+	if err != nil {
+		return "", err
+	}
+	plaintextBytes := make([]byte, plaintextLength)
+
+	// ...hence we need to create it again.
+	messageBytes = []byte(message)
 
 	result := C.olm_decrypt(
 		s.ptr,
@@ -309,10 +331,8 @@ func (s *Session) Decrypt(typ MessageType, message string) (string, error) {
 		unsafe.Pointer(&plaintextBytes[0]), C.size_t(len(plaintextBytes)),
 	)
 
-	err := getError(s, result)
-	if err != nil {
-		return "", err
-	}
+	err = getError(s, result)
+	panicOnError(err)
 
 	return string(plaintextBytes[:result]), nil
 }

@@ -242,3 +242,89 @@ func TestNewInboundSessionFrom(t *testing.T) {
 		})
 	})
 }
+
+func TestSessionDecrypt(t *testing.T) {
+	outSess, them, us := createOutboundSession()
+	preKeyMessage, _, _ := outSess.Encrypt("some plaintext")
+	theirIdentityKey := them.IdentityKeys().Curve25519
+	inSess, _ := NewInboundSessionFrom(us, theirIdentityKey, preKeyMessage)
+
+	cipher, typ, _ := outSess.Encrypt("some plaintext")
+
+	Convey("Decrypting", t, func() {
+		Convey("a valid message should work.", func() {
+			plaintext, err := inSess.Decrypt(typ, cipher)
+			So(err, ShouldBeNil)
+			So(plaintext, ShouldEqual, "some plaintext")
+		})
+		Convey("an invalid message should not work.", func() {
+			plaintext, err := inSess.Decrypt(typ, "invalid")
+			So(err, ShouldNotBeNil)
+			So(plaintext, ShouldBeEmpty)
+		})
+		Convey("an empty message should not panic.", func() {
+			So(func() {
+				inSess.Decrypt(typ, "")
+			}, ShouldNotPanic)
+		})
+	})
+}
+
+func TestSessionMatchesInboundSession(t *testing.T) {
+	outSess, them, us := createOutboundSession()
+	preKeyMessage, _, _ := outSess.Encrypt("some plaintext")
+	theirIdentityKey := them.IdentityKeys().Curve25519
+	inSess, _ := NewInboundSessionFrom(us, theirIdentityKey, preKeyMessage)
+
+	Convey("MatchesInboundSession", t, func() {
+		Convey("should not panic", func() {
+			Convey("on a valid message.", func() {
+				So(func() {
+					inSess.MatchesInboundSession(preKeyMessage)
+				}, ShouldNotPanic)
+			})
+			Convey("on an invalid message.", func() {
+				So(func() {
+					inSess.MatchesInboundSession("0")
+				}, ShouldNotPanic)
+			})
+			Convey("on an empty message.", func() {
+				So(func() {
+					inSess.MatchesInboundSession("")
+				}, ShouldNotPanic)
+			})
+		})
+	})
+}
+
+func TestSessionMatchesInboundSessionFrom(t *testing.T) {
+	outSess, them, us := createOutboundSession()
+	preKeyMessage, _, _ := outSess.Encrypt("some plaintext")
+	theirIdentityKey := them.IdentityKeys().Curve25519
+	inSess, _ := NewInboundSessionFrom(us, theirIdentityKey, preKeyMessage)
+
+	Convey("MatchesInboundSession", t, func() {
+		Convey("should not panic", func() {
+			Convey("on a valid key and message.", func() {
+				So(func() {
+					inSess.MatchesInboundSessionFrom(theirIdentityKey, preKeyMessage)
+				}, ShouldNotPanic)
+			})
+			Convey("on a valid key and an invalid message.", func() {
+				So(func() {
+					inSess.MatchesInboundSessionFrom(theirIdentityKey, "0")
+				}, ShouldNotPanic)
+			})
+			Convey("on an empty message.", func() {
+				So(func() {
+					inSess.MatchesInboundSessionFrom(theirIdentityKey, "")
+				}, ShouldNotPanic)
+			})
+			Convey("on an empty key.", func() {
+				So(func() {
+					inSess.MatchesInboundSessionFrom("", preKeyMessage)
+				}, ShouldNotPanic)
+			})
+		})
+	})
+}

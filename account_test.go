@@ -149,3 +149,16 @@ func TestAccountGenerateOneTimeKeys(t *testing.T) {
 		So(err, ShouldNotBeNil)
 	})
 }
+
+func TestAccountRemoveOneTimeKeys(t *testing.T) {
+	outSess, _, us := createOutboundSession()
+
+	Convey("RemoveOneTimeKeys should not panic", t, func() {
+		Convey("on a valid session.", func() {
+			us.RemoveOneTimeKeys(outSess)
+		})
+		Convey("on a nil session.", func() {
+			us.RemoveOneTimeKeys(nil)
+		})
+	})
+}

@@ -231,6 +231,9 @@ func (a *Account) GenerateOneTimeKeys(numberOfKeys int) error {
 //
 // C-Function: olm_remove_one_time_keys
 func (a *Account) RemoveOneTimeKeys(sess *Session) error {
+	if sess == nil {
+		return errors.New("session must not be nil")
+	}
 	result := C.olm_remove_one_time_keys(a.ptr, sess.ptr)
 	return getError(a, result)
 }
