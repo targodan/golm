@@ -1,4 +1,4 @@
-# golm [![Build Status](https://travis-ci.org/targodan/golm.svg?branch=master)](https://travis-ci.org/targodan/golm) [![Coverage Status](https://coveralls.io/repos/github/targodan/golm/badge.svg?branch=master)](https://coveralls.io/github/targodan/golm?branch=master)
+# golm [![Build Status](https://travis-ci.org/targodan/golm.svg?branch=master)](https://travis-ci.org/targodan/golm) [![Coverage Status](https://coveralls.io/repos/github/targodan/golm/badge.svg?branch=master)](https://coveralls.io/github/targodan/golm?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/targodan/golm)](https://goreportcard.com/report/github.com/targodan/golm)
 
 A go binding for the libolm cryptographic library.
 
