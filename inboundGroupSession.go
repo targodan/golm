@@ -156,7 +156,7 @@ func (s *InboundGroupSession) Decrypt(message string) (plaintext string, index u
 	unsignedMsgBytes := (*C.uint8_t)(unsafe.Pointer(&messageBytes[0]))
 	messageSize := C.size_t(len(messageBytes))
 
-	// This destroyes the input buffer...
+	// This destroys the input buffer...
 	plaintextLength := C.olm_group_decrypt_max_plaintext_length(s.ptr, unsignedMsgBytes, messageSize)
 	plaintextBytes := make([]byte, plaintextLength)
 	unsignedPlainBytes := (*C.uint8_t)(unsafe.Pointer(&plaintextBytes[0]))

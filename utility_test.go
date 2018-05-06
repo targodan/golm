@@ -15,7 +15,7 @@ func TestNewUtility(t *testing.T) {
 
 func TestUtilityLastError(t *testing.T) {
 	util := NewUtility()
-	Convey("LastError should return SUCCESS if no error occured.", t, func() {
+	Convey("LastError should return SUCCESS if no error occurred.", t, func() {
 		err := util.lastError()
 		So(err, ShouldEqual, "SUCCESS")
 	})
