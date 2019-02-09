@@ -10,11 +10,11 @@ go:
     - 1.9
     - 1.8
     - 1.7
-    - 1.6
     - tip
 
 env:
     matrix:
+        - GOLM_VERSION=3.0.0
         - GOLM_VERSION=2.2.2
         - GOLM_VERSION=2.2.1
         - GOLM_VERSION=2.2.0
